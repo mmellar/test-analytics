@@ -26,6 +26,8 @@ import javax.jdo.annotations.PersistenceCapable;
 import javax.jdo.annotations.Persistent;
 import javax.jdo.annotations.PrimaryKey;
 
+import com.google.testing.testify.risk.frontend.client.util.NotificationUtil;
+
 /**
  * JDO object for Capability.
  *
@@ -177,7 +179,8 @@ public class Capability implements Serializable, HasLabels {
    * Computes a capability intersection key given the raw component and attribute IDs.
    */
   private static int getCapabilityIntersectionKey(long componentId, long attributeId) {
-    return Integer.valueOf((int) ((componentId << 16) ^ attributeId));
+	long pair = Long.reverse(((componentId + attributeId) * (componentId + attributeId + 1) / 2 + componentId));
+    return Integer.valueOf((int)pair);
   }
 
   public long getDisplayOrder() {
