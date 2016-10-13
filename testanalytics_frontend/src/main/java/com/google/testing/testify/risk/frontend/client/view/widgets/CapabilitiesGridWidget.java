@@ -42,6 +42,8 @@ import com.google.testing.testify.risk.frontend.model.Pair;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
+
 
 /**
  * A widget for displaying a set of capabilities in a Grid.
@@ -55,9 +57,9 @@ public class CapabilitiesGridWidget extends Composite
   private final List<Component> components = Lists.newArrayList();
 
   // Map from intersection key to capability list.
-  private final Multimap<Integer, Capability> capabilityMap = HashMultimap.create();
+  private final Multimap<Long, Capability> capabilityMap = HashMultimap.create();
   // Map from intersection key to table cell.
-  private final Map<Integer, HTML> cellMap = Maps.newHashMap();
+  private final Map<Long, HTML> cellMap = Maps.newHashMap();
 
   private final Grid grid = new Grid();
 
@@ -77,7 +79,7 @@ public class CapabilitiesGridWidget extends Composite
    * @param capability capability to add.
    */
   public void addCapability(Capability capability) {
-    Integer key = capability.getCapabilityIntersectionKey();
+    Long key = capability.getCapabilityIntersectionKey();
 
     // Add the capability.
     addCapabilityWithoutUpdate(capability);
@@ -87,7 +89,7 @@ public class CapabilitiesGridWidget extends Composite
   }
 
   public void deleteCapability(Capability capability) {
-    for (Integer key : capabilityMap.keySet()) {
+    for (Long key : capabilityMap.keySet()) {
       Collection<Capability> c = capabilityMap.get(key);
       if (c.contains(capability)) {
         c.remove(capability);
@@ -123,7 +125,7 @@ public class CapabilitiesGridWidget extends Composite
   }
 
   private void addCapabilityWithoutUpdate(Capability capability) {
-    Integer key = capability.getCapabilityIntersectionKey();
+    Long key = capability.getCapabilityIntersectionKey();
     capabilityMap.put(key, capability);
   }
 
@@ -164,7 +166,7 @@ public class CapabilitiesGridWidget extends Composite
 
         Component component = components.get(cIndex);
         Attribute attribute = attributes.get(aIndex);
-        Integer key = Capability.getCapabilityIntersectionKey(component, attribute);
+        Long key = Capability.getCapabilityIntersectionKey(component, attribute);
 
         grid.getCellFormatter().setStyleName(row, column, "tty-GridCell");
         if (row == highlightedCellRow && column == highlightedCellColumn) {
@@ -178,6 +180,7 @@ public class CapabilitiesGridWidget extends Composite
         cell.addMouseOutHandler(createMouseOutHandler(row, column));
 
         cellMap.put(key, cell);
+        console("key: " + key);
         grid.setWidget(row, column, cell);
       }
     }
@@ -194,9 +197,15 @@ public class CapabilitiesGridWidget extends Composite
    */
   private MouseOverHandler createMouseOverHandler(final int row, final int column) {
     return new MouseOverHandler() {
+      int myRow, myColumn;
+      {
+        this.myColumn = column;
+        this.myRow = row;
+      }
       @Override
       public void onMouseOver(MouseOverEvent event) {
-        mouseOver(row, column);
+        console("row: " + myRow + " column: "+ myColumn);
+        mouseOver(myRow, myColumn);
       }
     };
   }
@@ -271,12 +280,12 @@ public class CapabilitiesGridWidget extends Composite
    * This updates the contents of the grid based off the current capability data.
    */
   private void updateGridCells() {
-    for (Integer key : cellMap.keySet()) {
+    for (Long key : cellMap.keySet()) {
       updateGridCell(key);
     }
   }
 
-  private void updateGridCell(Integer key) {
+  private void updateGridCell(Long key) {
     int size = capabilityMap.get(key).size();
 
     String text = "&nbsp;";
@@ -317,4 +326,9 @@ public class CapabilitiesGridWidget extends Composite
       ValueChangeHandler<Pair<Component, Attribute>> handler) {
     return addHandler(handler, ValueChangeEvent.getType());
   }
+
+  public static native void console(String text)
+/*-{
+    console.log(text);
+}-*/;
 }
