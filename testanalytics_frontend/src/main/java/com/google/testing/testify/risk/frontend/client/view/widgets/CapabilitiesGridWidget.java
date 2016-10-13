@@ -327,8 +327,4 @@ public class CapabilitiesGridWidget extends Composite
     return addHandler(handler, ValueChangeEvent.getType());
   }
 
-  public static native void console(String text)
-/*-{
-    console.log(text);
-}-*/;
 }
